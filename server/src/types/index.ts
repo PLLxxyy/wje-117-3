@@ -39,7 +39,21 @@ export interface Checkin {
   actual_duration_minutes: number;
   feeling: number; // 1-5
   notes: string;
+  shoe_id: number | null;
   created_at: string;
+}
+
+export interface Shoe {
+  id: number;
+  user_id: number;
+  name: string;
+  brand: string;
+  purchase_date: string;
+  initial_mileage_km: number;
+  status: 'active' | 'retired';
+  notes: string;
+  created_at: string;
+  total_distance?: number;
 }
 
 export interface CoachStudent {

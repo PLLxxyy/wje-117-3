@@ -9,6 +9,7 @@ import CreatePlan from './pages/CreatePlan';
 import TrainingCalendar from './pages/TrainingCalendar';
 import Checkin from './pages/Checkin';
 import Stats from './pages/Stats';
+import Shoes from './pages/Shoes';
 import CoachView from './pages/CoachView';
 import Dashboard from './pages/admin/Dashboard';
 import Templates from './pages/admin/Templates';
@@ -28,6 +29,7 @@ function App() {
           <Route path="/calendar" element={<ProtectedRoute><TrainingCalendar /></ProtectedRoute>} />
           <Route path="/checkin/:planDayId" element={<ProtectedRoute><Checkin /></ProtectedRoute>} />
           <Route path="/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
+          <Route path="/shoes" element={<ProtectedRoute><Shoes /></ProtectedRoute>} />
           <Route path="/coach" element={<ProtectedRoute requiredRole="coach"><CoachView /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Dashboard /></ProtectedRoute>} />
           <Route path="/admin/templates" element={<ProtectedRoute requiredRole="admin"><Templates /></ProtectedRoute>} />

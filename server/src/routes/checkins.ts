@@ -6,7 +6,7 @@ const router = Router();
 // POST /api/checkins - 训练打卡
 router.post('/', (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { plan_id, plan_day_id, actual_distance_km, actual_duration_minutes, feeling, notes } = req.body;
+  const { plan_id, plan_day_id, actual_distance_km, actual_duration_minutes, feeling, notes, shoe_id } = req.body;
 
   if (!plan_id || !plan_day_id || actual_distance_km === undefined || !actual_duration_minutes || !feeling) {
     res.status(400).json({ error: '请填写完整的打卡信息' });
@@ -18,6 +18,14 @@ router.post('/', (req: Request, res: Response) => {
     return;
   }
 
+  if (shoe_id !== undefined && shoe_id !== null) {
+    const shoe = db.prepare('SELECT id FROM shoes WHERE id = ? AND user_id = ?').get(shoe_id, userId);
+    if (!shoe) {
+      res.status(400).json({ error: '跑鞋不存在' });
+      return;
+    }
+  }
+
   // Check if already checked in for this day
   const existing = db.prepare(
     'SELECT id FROM checkins WHERE user_id = ? AND plan_day_id = ?'
@@ -26,15 +34,15 @@ router.post('/', (req: Request, res: Response) => {
   if (existing) {
     // Update existing checkin
     db.prepare(
-      'UPDATE checkins SET actual_distance_km = ?, actual_duration_minutes = ?, feeling = ?, notes = ? WHERE id = ?'
-    ).run(actual_distance_km, actual_duration_minutes, feeling, notes || '', (existing as any).id);
+      'UPDATE checkins SET actual_distance_km = ?, actual_duration_minutes = ?, feeling = ?, notes = ?, shoe_id = ? WHERE id = ?'
+    ).run(actual_distance_km, actual_duration_minutes, feeling, notes || '', shoe_id || null, (existing as any).id);
     res.json({ id: (existing as any).id, message: '打卡记录已更新' });
     return;
   }
 
   const result = db.prepare(
-    'INSERT INTO checkins (user_id, plan_id, plan_day_id, actual_distance_km, actual_duration_minutes, feeling, notes) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).run(userId, plan_id, plan_day_id, actual_distance_km, actual_duration_minutes, feeling, notes || '');
+    'INSERT INTO checkins (user_id, plan_id, plan_day_id, actual_distance_km, actual_duration_minutes, feeling, notes, shoe_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(userId, plan_id, plan_day_id, actual_distance_km, actual_duration_minutes, feeling, notes || '', shoe_id || null);
 
   res.json({ id: result.lastInsertRowid, message: '打卡成功' });
 });
@@ -45,7 +53,13 @@ router.get('/plan/:planId', (req: Request, res: Response) => {
   const planId = Number(req.params.planId);
 
   const checkins = db.prepare(
-    'SELECT c.*, pd.week_number, pd.day_number, pd.workout_type FROM checkins c JOIN plan_days pd ON c.plan_day_id = pd.id WHERE c.plan_id = ? AND c.user_id = ? ORDER BY pd.week_number, pd.day_number'
+    `SELECT c.*, pd.week_number, pd.day_number, pd.workout_type,
+            s.id as shoe_id, s.name as shoe_name, s.brand as shoe_brand
+     FROM checkins c
+     JOIN plan_days pd ON c.plan_day_id = pd.id
+     LEFT JOIN shoes s ON c.shoe_id = s.id
+     WHERE c.plan_id = ? AND c.user_id = ?
+     ORDER BY pd.week_number, pd.day_number`
   ).all(planId, userId);
 
   res.json(checkins);
@@ -88,9 +102,11 @@ router.get('/recent', (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
   const recent = db.prepare(`
-    SELECT c.*, pd.week_number, pd.day_number, pd.workout_type, pd.description
+    SELECT c.*, pd.week_number, pd.day_number, pd.workout_type, pd.description,
+           s.id as shoe_id, s.name as shoe_name, s.brand as shoe_brand
     FROM checkins c
     JOIN plan_days pd ON c.plan_day_id = pd.id
+    LEFT JOIN shoes s ON c.shoe_id = s.id
     WHERE c.user_id = ?
     ORDER BY c.created_at DESC
     LIMIT 10

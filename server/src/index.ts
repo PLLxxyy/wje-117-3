@@ -6,6 +6,7 @@ import { authMiddleware } from './middleware/auth';
 import authRoutes from './routes/auth';
 import planRoutes from './routes/plans';
 import checkinRoutes from './routes/checkins';
+import shoeRoutes from './routes/shoes';
 import coachRoutes from './routes/coach';
 import adminRoutes from './routes/admin';
 
@@ -26,6 +27,7 @@ app.use('/api/auth', authRoutes);
 // Protected routes
 app.use('/api/plans', authMiddleware, planRoutes);
 app.use('/api/checkins', authMiddleware, checkinRoutes);
+app.use('/api/shoes', authMiddleware, shoeRoutes);
 app.use('/api/coach', authMiddleware, coachRoutes);
 app.use('/api/admin', authMiddleware, adminRoutes);
 

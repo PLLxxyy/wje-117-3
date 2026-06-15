@@ -40,6 +40,7 @@ export default function Navbar() {
           <Link to="/calendar" style={navLinkStyle}>训练日历</Link>
           <Link to="/create-plan" style={navLinkStyle}>新建计划</Link>
           <Link to="/stats" style={navLinkStyle}>跑量统计</Link>
+          <Link to="/shoes" style={navLinkStyle}>装备管理</Link>
           {user.role === 'coach' && (
             <Link to="/coach" style={navLinkStyle}>教练端</Link>
           )}

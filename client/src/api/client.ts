@@ -114,6 +114,42 @@ class ApiClient {
     return this.request<any[]>('/checkins/recent');
   }
 
+  // Shoes
+  async getShoes() {
+    return this.request<any[]>('/shoes');
+  }
+
+  async getShoe(id: number) {
+    return this.request<any>(`/shoes/${id}`);
+  }
+
+  async createShoe(data: any) {
+    return this.request<any>('/shoes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateShoe(id: number, data: any) {
+    return this.request<any>(`/shoes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateShoeStatus(id: number, status: string) {
+    return this.request<any>(`/shoes/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async deleteShoe(id: number) {
+    return this.request<any>(`/shoes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Coach
   async getStudents() {
     return this.request<any[]>('/coach/students');

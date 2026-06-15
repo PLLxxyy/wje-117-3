@@ -102,6 +102,19 @@ export function initDatabase(): void {
       FOREIGN KEY (created_by) REFERENCES users(id)
     );
 
+    CREATE TABLE IF NOT EXISTS shoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      brand TEXT NOT NULL DEFAULT '',
+      purchase_date TEXT NOT NULL DEFAULT '',
+      initial_mileage_km REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'retired')),
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
     CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -111,6 +124,15 @@ export function initDatabase(): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  // Add shoe_id column to checkins if not exists
+  const checkinsColumns = db.prepare("PRAGMA table_info(checkins)").all() as any[];
+  const hasShoeId = checkinsColumns.some((c: any) => c.name === 'shoe_id');
+  if (!hasShoeId) {
+    db.exec(`
+      ALTER TABLE checkins ADD COLUMN shoe_id INTEGER;
+    `);
+  }
 
   // Seed default accounts
   const coachExists = db.prepare('SELECT id FROM users WHERE username = ?').get('coach');

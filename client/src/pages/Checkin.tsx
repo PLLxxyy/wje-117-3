@@ -12,6 +12,8 @@ export default function Checkin() {
   const [duration, setDuration] = useState('');
   const [feeling, setFeeling] = useState(3);
   const [notes, setNotes] = useState('');
+  const [shoes, setShoes] = useState<any[]>([]);
+  const [selectedShoeId, setSelectedShoeId] = useState<string>('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -22,12 +24,17 @@ export default function Checkin() {
 
   async function loadData() {
     try {
-      const activePlan = await api.getActivePlan();
+      const [activePlan, shoesData] = await Promise.all([
+        api.getActivePlan(),
+        api.getShoes(),
+      ]);
+
       if (!activePlan) {
         navigate('/calendar');
         return;
       }
       setPlan(activePlan);
+      setShoes(shoesData.filter((s: any) => s.status === 'active'));
 
       const targetDay = activePlan.days?.find((d: any) => d.id === Number(planDayId));
       if (!targetDay) {
@@ -44,6 +51,7 @@ export default function Checkin() {
         setDuration(String(existing.actual_duration_minutes));
         setFeeling(existing.feeling);
         setNotes(existing.notes || '');
+        setSelectedShoeId(existing.shoe_id ? String(existing.shoe_id) : '');
       } else {
         // Pre-fill with target values
         setDistance(String(targetDay.target_distance_km));
@@ -68,6 +76,7 @@ export default function Checkin() {
         actual_duration_minutes: Number(duration),
         feeling,
         notes,
+        shoe_id: selectedShoeId ? Number(selectedShoeId) : null,
       });
       navigate('/calendar');
     } catch (err: any) {
@@ -182,6 +191,52 @@ export default function Checkin() {
             <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4 }}>
               {feeling <= 1 ? '非常吃力' : feeling === 2 ? '比较吃力' : feeling === 3 ? '一般' : feeling === 4 ? '状态不错' : '状态极佳'}
             </div>
+          </div>
+
+          <div className="input-group">
+            <label>穿着跑鞋</label>
+            {shoes.length > 0 ? (
+              <select
+                value={selectedShoeId}
+                onChange={e => setSelectedShoeId(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid var(--gray-200)',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  background: 'white',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="">不选择</option>
+                {shoes.map(shoe => (
+                  <option key={shoe.id} value={shoe.id}>
+                    {shoe.name} {shoe.brand ? `(${shoe.brand})` : ''} - 累计 {shoe.total_distance.toFixed(1)}km
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div style={{
+                padding: '12px',
+                background: 'var(--gray-50)',
+                borderRadius: 8,
+                fontSize: 13,
+                color: 'var(--gray-500)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <span>还没有添加跑鞋</span>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => navigate('/shoes')}
+                >
+                  去添加
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="input-group">
